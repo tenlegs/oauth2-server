@@ -42,8 +42,15 @@ class RefreshTokenGrant extends AbstractGrant
         ResponseTypeInterface $responseType,
         DateInterval $accessTokenTTL
     ) {
-        // Validate request
-        $client = $this->validateClient($request);
+        list($clientId) = $this->getClientCredentials($request);
+
+        $client = $this->getClientEntityOrFail($clientId, $request);
+
+        // Only validate the client if it is confidential
+        if ($client->isConfidential()) {
+            $this->validateClient($request);
+        }
+
         $oldRefreshToken = $this->validateOldRefreshToken($request, $client->getIdentifier());
         $scopes = $this->validateScopes($this->getRequestParameter(
             'scope',
